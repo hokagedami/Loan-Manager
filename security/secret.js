@@ -1,0 +1,1 @@
+module.exports = secretLoginKey = 'codekage.lendsqr*api?login_key';
