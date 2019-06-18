@@ -9,7 +9,7 @@ const router = express.Router();
 /*Get all loans available*/
 router.get('', VerifyToken, (req, res, next) => {
     try {
-        jwt.verify(req.token, privateKey, (err, user_bio_data) => {
+        jwt.verify(req.token, privateKey, (err) => {
             if (err) {
                 res.status(403).json({error: err.message});
             }
@@ -22,7 +22,7 @@ router.get('', VerifyToken, (req, res, next) => {
 });
 
 /*Apply for a loan*/
-router.post('/apply/:loanID', VerifyToken, (req, res, next) => {
+router.post('/apply/:loanID', VerifyToken, (req, res) => {
     try {
         jwt.verify(req.token, privateKey, (err, user_bio_data) => {
             if (err) {

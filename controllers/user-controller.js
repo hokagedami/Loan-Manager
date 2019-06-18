@@ -8,19 +8,21 @@ const saltRounds = 10;
 let users = [];
 
 const registerUser = async (user_data) => {
-    if (!user_data
-        && !user_data.first_name
-        && !user_data.last_name
-        && !user_data.email
-        && !user_data.password
-        && !user_data.user_name) {
-        throw Error('all fields must be provided!');
+    // Ensure all required fields are provided.
+    if ((user_data.first_name === undefined || user_data.first_name === '')
+        || (user_data.last_name === undefined || user_data.last_name === '')
+        || (user_data.email === undefined || user_data.email === '')
+        || (user_data.password === undefined || user_data.password === '')
+        || (user_data.user_name === undefined || user_data.user_name === '')) {
+        throw Error('all required fields must be provided!');
     }
 
+    // Check that username is not in use
     if (users.filter((user) => { return user.user_name === user_data.user_name}).length > 0) {
         throw Error('an account is already registered with username ' + user_data.user_name);
     }
 
+    // Check that email is not in use
     if (users.filter((user) => { return user.email === user_data.email}).length > 0) {
         throw Error('an account is already registered with email ' + user_data.email);
     }
@@ -41,24 +43,28 @@ const registerUser = async (user_data) => {
     return user;
 };
 
-const userLogin = async (login_data) => {
-    if (!login_data
-        && !login_data.user_name
-        && !login_data.password) {
+const userLogin = (login_data) => {
+
+    if (login_data.user_name === undefined || login_data.user_name === ''
+        || login_data.password === undefined || login_data.password === '') {
         throw Error('username and password must be provided!');
     }
 
-    const logged_in_user = users.filter(async (user) => {
-        return await bcrypt.compare(login_data.password, user.password);
-    });
-
-    if (logged_in_user.length === 1) {
-        const user_bio_data = {};
-        Object.assign(user_bio_data, logged_in_user[0]);
-        delete user_bio_data.password;
-        return user_bio_data;
+    let user_bio_data = null;
+    for (let i = 0; i < users.length; i++) {
+        const user = users[i];
+        if (user.user_name === login_data.user_name) {
+            user_bio_data = {};
+            Object.assign(user_bio_data, user);
+            break;
+        }
     }
-    return null;
+    if (user_bio_data) {
+        const match = bcrypt.compareSync(login_data.password, user_bio_data.password);
+        delete user_bio_data.password;
+        return match ? user_bio_data : {error: 'incorrect password'};
+    }
+    return user_bio_data;
 };
 
 const addLoan = (user_id, loan_data) => {

@@ -6,7 +6,7 @@ const privateKey = require('../security/secret');
 
 
 /*Create New User*/
-router.post('/register', async (req, res, next) => {
+router.post('/register', async (req, res) => {
     try {
 
         if (!req.body.user_name
@@ -39,14 +39,14 @@ router.post('/register', async (req, res, next) => {
 });
 
 /*User Login*/
-router.post('/login', async (req, res, next) => {
+router.post('/login', async (req, res) => {
 
   /*Return user-model.js bio data*/
     try {
-        if (!req.body) {
+        if (req.body.user_name === "" || req.body.password === '') {
             res.status(400).json({error: 'username and password not provided'});
         }
-        const logged_in_user = await UserFunctions.userLogin({
+        const logged_in_user = UserFunctions.userLogin({
             user_name: req.body.user_name,
             password: req.body.password
         });
@@ -54,19 +54,21 @@ router.post('/login', async (req, res, next) => {
             // throw Error(`No record associated with username ${req.body.user_name}.`);
             res.status(404).json({error: 'No record associated with username ' + req.body.user_name + '.'});
             return;
+        } else if (logged_in_user.error) {
+            res.status(401).json({error: logged_in_user.error});
+            return;
         }
-        console.log(privateKey);
         const token = jwt.sign({user: logged_in_user}, privateKey, {expiresIn: '1hr', noTimestamp: true, algorithm: 'HS384'});
         res.send({login: 'successful', token, bio_data: logged_in_user});
     }
     catch (e) {
-        res.status(500).json({error: 'unable to login', trace: e.stack})
+        res.status(500).json({error: 'An error occurred, try again later.'});
     }
 });
 
 /*Testing*/
 router.get('', (req, res, next) => {
-    res.send({status: 'welcome to lendsqr API!!!!'})
+    res.send({status: 'welcome to NodeJS Backend!!!!'})
 });
 
 
