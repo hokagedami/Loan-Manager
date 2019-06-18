@@ -22,11 +22,14 @@ router.post('/register', async (req, res, next) => {
             first_name: req.body.first_name,
             last_name: req.body.last_name,
             password: req.body.password,
-            email: req.body.email
+            email: req.body.email,
+            phone: req.body.phone,
+            address: req.body.address
         });
         res.status(201).json({
-            reg_status: 'registration successful',
-            user
+            username: user.user_name,
+            id: user.id,
+            registration_status: 'registration successful'
         });
     }
     catch (e) {
@@ -48,11 +51,13 @@ router.post('/login', async (req, res, next) => {
             password: req.body.password
         });
         if (!logged_in_user) {
-            res.status(404).json({error: 'No record associated with username ' + req.body.user_name + '.'})
+            // throw Error(`No record associated with username ${req.body.user_name}.`);
+            res.status(404).json({error: 'No record associated with username ' + req.body.user_name + '.'});
+            return;
         }
         console.log(privateKey);
         const token = jwt.sign({user: logged_in_user}, privateKey, {expiresIn: '1hr', noTimestamp: true, algorithm: 'HS384'});
-        res.send({login: 'successful', token});
+        res.send({login: 'successful', token, bio_data: logged_in_user});
     }
     catch (e) {
         res.status(500).json({error: 'unable to login', trace: e.stack})

@@ -1,3 +1,5 @@
+const moment = require('moment');
+
 const UserController = require('../models/user-model');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
@@ -29,7 +31,11 @@ const registerUser = async (user_data) => {
         last_name: user_data.last_name,
         email: user_data.email,
         password: hash,
-        user_name: user_data.user_name
+        user_name: user_data.user_name,
+        phone: user_data.phone,
+        address: user_data.address,
+        active_loan_start: '',
+        active_loan_end: ''
     });
     users.push(user);
     return user;
@@ -57,17 +63,27 @@ const userLogin = async (login_data) => {
 
 const addLoan = (user_id, loan_data) => {
     const user = users.filter((user) => {return user.id === user_id});
-    if (user.length === 1) {
+    if (user.length === 1 && !loan_data.error) {
         const new_user = user[0];
+        const start_time = moment().format("DD-MMM-YYYY");
+        const end_time = moment(start_time, "DD-MMM-YYYY").add(loan_data.tenure, 'months').format("DD-MMM-YYYY");
+        if (new_user.active_loans_count > 0) {
+            const additional_loan_eligibility = moment(start_time, "DD-MMM-YYYY").isSameOrAfter(moment(new_user.active_loan_end, "DD-MMM-YYYY"));
+            if (!additional_loan_eligibility) {
+                return {error: 'You are not eligible for this loan!'};
+            }
+        }
+        new_user.active_loan_start = start_time;
+        new_user.active_loan_end = end_time;
         new_user.active_loans.push(loan_data);
         new_user.active_loans_count = ++new_user.active_loans_count;
         users = users.filter((user) => {
             return user.id !== user_id;
         });
         users.push(new_user);
-        return users;
+        return new_user;
     }
-    return user;
+    return {error: 'an error occurred, kindly re-login to continue'};
 
 
 };

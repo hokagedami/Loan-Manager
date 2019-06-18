@@ -24,9 +24,10 @@ const getLoans = () => {
 };
 
 const getLoan = (loan_id) => {
-    return loans.filter((loan) => {
+    const loan_found = loans.filter((loan) => {
         return loan.id === loan_id;
     });
+    return loan_found.length === 1 ? loan_found[0] : {error: `no loan with ID provided.`}
 };
 module.exports  = {
     getLoans,
